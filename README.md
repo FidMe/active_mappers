@@ -1,5 +1,7 @@
 # ActiveMappers
 
+[![Build Status](https://travis-ci.org/FidMe/active_mappers.svg?branch=master)](https://travis-ci.org/FidMe/active_mappers)
+
 If you have ever done Rails API development, you must have considered using a layer to abstract and centralize your JSON objects construction.
 
 There are multiple solutions out on the market, here a quick overview of each :
