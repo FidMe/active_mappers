@@ -4,7 +4,7 @@
 
 If you have ever done Rails API development, you must have considered using a layer to abstract and centralize your JSON objects construction.
 
-There are multiple solutions out on the market, here a quick overview of each :
+There are multiple solutions out on the market, here is a quick overview of each :
 
 | Solution                 | Pros                                                                               | Cons                                                  |
 | ------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------- |
@@ -26,6 +26,10 @@ Execute
 ```bash
 $ bundle install
 ```
+
+Then, depending on your usage you may want to create an `app/mappers` folder in your Rails application.
+
+You will put all your mappers inside of it.
 
 ## Usage
 
