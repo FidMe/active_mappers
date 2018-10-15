@@ -1,5 +1,6 @@
 require 'active_support'
 require 'active_support/core_ext/object/try'
+require 'active_support/core_ext/string/inflections'
 require_relative 'core_ext/hash'
 
 module ActiveMappers
@@ -10,7 +11,6 @@ module ActiveMappers
       each do |resource|
         h = {}
         params.each do |param|
-          p param, resource
           h[param] = resource.try(param)
         end
         h
