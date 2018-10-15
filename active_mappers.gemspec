@@ -9,4 +9,5 @@ Gem::Specification.new do |s|
   s.files       = ['lib/active_mappers.rb']
   s.homepage    = 'http://rubygems.org/gems/active_mappers'
   s.license     = 'MIT'
+  s.add_runtime_dependency(%q<activesupport>, [">= 4.2"])
 end
