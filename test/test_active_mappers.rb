@@ -78,4 +78,29 @@ class ActiveMappersTest < Minitest::Test
     user = User.new('123', 'Michael', friend)
     assert_equal 'Nicolas', ProfileMapper.with(user)[:name]
   end
+
+  def test_core_extensions_work_as_expected
+    params = {
+      first_name: 'Nathan',
+      emails: [{
+        email_private: 'nathan@orange.fr',
+        email_professional: 'nathan@fidme.com'
+      }],
+      secret: {
+        password: 'azerty',
+        password_confirmation: 'azerty',
+        password_history: [
+          passwords: {
+            first_password: 'qwerty',
+            actual_password: 'azerty'
+          }
+        ]
+      }
+    }
+    response = params.to_lower_camel_case
+    assert_equal 'Nathan', response[:firstName]
+    assert_equal 'nathan@fidme.com', response[:emails][0][:emailProfessional]
+    assert_equal 'azerty', response[:secret][:passwordConfirmation]
+    assert_equal 'qwerty', response[:secret][:passwordHistory][0][:passwords][:firstPassword]
+  end
 end
