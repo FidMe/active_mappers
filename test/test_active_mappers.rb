@@ -78,6 +78,14 @@ class ActiveMappersTest < Minitest::Test
     assert_equal 'Nicolas', ProfileMapper.with(user, root: :user)[:user][:name]
   end
 
+  class RootLessMapper < ActiveMappers::Base
+    attributes :name
+  end
+  def test_rootless_can_remove_root
+    user = User.new('123', 'Michael', nil)
+    assert_equal 'Michael', RootLessMapper.with(user, rootless: true)[:name]
+  end
+
   def test_core_extensions_work_as_expected
     params = {
       first_name: 'Nathan',
