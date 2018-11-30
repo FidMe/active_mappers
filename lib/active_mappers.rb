@@ -1,6 +1,7 @@
 require 'active_support'
 require 'active_support/core_ext/object/try'
 require 'active_support/core_ext/string/inflections'
+require 'active_support/core_ext/string'
 require_relative 'core_ext/hash'
 
 module ActiveMappers
@@ -34,21 +35,21 @@ module ActiveMappers
 
       each do |resource|
         mapper ||= "::#{resource.send(key).class.name}Mapper".constantize
-        { key => mapper.with(path.to_s.split('.').inject(resource, :try)) }
+        { key => mapper.with(path.to_s.split('.').inject(resource, :try), rootless: true) }
       end
     end
 
     def self.polymorphic(key)
       each do |resource|
         resource_mapper = "::#{resource.send("#{key}_type")}Mapper".constantize
-        { key => resource_mapper.with(resource.send(key)) }
+        { key => resource_mapper.with(resource.send(key), rootless: true) }
       end
     end
 
     def self.acts_as_polymorph
       each do |resource|
         mapper = "::#{resource.class}Mapper".constantize
-        mapper.with(resource)
+        mapper.with(resource, rootless: true)
       rescue NameError
         raise NotImplementedError, 'No mapper found for this type of resource'
       end
@@ -58,8 +59,21 @@ module ActiveMappers
       @@renderers[name] = (@@renderers[name] || []) << block
     end
 
-    def self.with(args)
-      args.respond_to?(:each) ? all(args) : one(args)
+    def self.with(args, options = {})
+      if options[:rootless]
+        args.respond_to?(:each) ? all(args) : one(args)
+      else
+        render_with_root(args, options)
+      end
+    end
+
+    def self.render_with_root(args, options = {})
+      resource = options[:root] || self.name.gsub('Mapper', '').downcase
+      if args.respond_to?(:each)
+        { resource.tableize.gsub('/', '_').to_sym => all(args) }
+      else
+        { resource.to_sym => one(args) }
+      end
     end
 
     def self.all(collection)

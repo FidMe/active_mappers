@@ -40,23 +40,23 @@ class ActiveMappersTest < Minitest::Test
 
     mapped_users = UserMapper.with(users)
 
-    assert_equal 5, mapped_users.size
-    assert_equal '123', mapped_users[0][:id]
+    assert_equal 5, mapped_users[:users].size
+    assert_equal '123', mapped_users[:users][0][:id]
   end
 
   def test_can_render_a_single_resource
     user = User.new('123', 'Michael', nil)
-    assert_equal user.id, UserMapper.with(user)[:id]
+    assert_equal user.id, UserMapper.with(user)[:user][:id]
   end
 
   def test_each_can_be_used_to_declare_custom_attrs
     user = User.new('123', 'Michael', nil)
-    assert_equal 'lol', UserMapper.with(user)[:lol]
+    assert_equal 'lol', UserMapper.with(user)[:user][:lol]
   end
 
   def test_each_can_be_chained
     user = User.new('123', 'Michael', nil)
-    assert_equal 'lola', UserMapper.with(user)[:lola]
+    assert_equal 'lola', UserMapper.with(user)[:user][:lola]
   end
 
   class FriendShipMapper < ActiveMappers::Base
@@ -66,8 +66,7 @@ class ActiveMappersTest < Minitest::Test
   def test_relation_can_query_other_mapepr
     friend = Friend.new('124', 'Nicolas', nil)
     user = User.new('123', 'Michael', friend)
-
-    assert_equal 'Nicolas', FriendShipMapper.with(user)[:friend][:name]
+    assert_equal 'Nicolas', FriendShipMapper.with(user, root: :user)[:user][:friend][:name]
   end
 
   class ProfileMapper < ActiveMappers::Base
@@ -76,7 +75,7 @@ class ActiveMappersTest < Minitest::Test
   def test_delegate_can_remap_attributes
     friend = Friend.new('124', 'Nicolas', nil)
     user = User.new('123', 'Michael', friend)
-    assert_equal 'Nicolas', ProfileMapper.with(user)[:name]
+    assert_equal 'Nicolas', ProfileMapper.with(user, root: :user)[:user][:name]
   end
 
   def test_core_extensions_work_as_expected
