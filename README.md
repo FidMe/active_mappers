@@ -38,11 +38,13 @@ You will put all your mappers inside of it.
 UserMapper.with(user)
 # =>
 # {
-#   id: '123',
-#   email: 'mvilleneuve@snapp.fr',
-#   profile: {
-#     first_name: 'Michael',
-#     last_name: 'Villeneuve',
+#   user: {
+#     id: '123',
+#     email: 'mvilleneuve@snapp.fr',
+#     profile: {
+#       first_name: 'Michael',
+#       last_name: 'Villeneuve',
+#     }
 #   }
 # }
 ```
@@ -72,7 +74,7 @@ Say you have a model with the following structure :
 }
 ```
 
-And you want to generate that :
+And you want to generate this structure :
 
 ```ruby
 {
@@ -111,10 +113,12 @@ It will generate something like
 
 ```ruby
 {
-  email: 'mvilleneuve@snapp.fr',
-  account: {
-    first_name: 'Michael',
-    last_name: 'Villeneuve'
+  user: {
+    email: 'mvilleneuve@snapp.fr',
+    account: {
+      first_name: 'Michael',
+      last_name: 'Villeneuve'
+    }
   }
 }
 ```
@@ -190,11 +194,13 @@ end
 Will generate the following :
 
 ```ruby
-[
-  { name: 'Michael', wings_count: 2 },
-  { name: 'Emeric', fins_count: 1 },
-  { name: 'Arthur', has_venom: true },
-]
+{
+  animals: [
+    { name: 'Michael', wings_count: 2 },
+    { name: 'Emeric', fins_count: 1 },
+    { name: 'Arthur', has_venom: true },
+  ]
+}
 ```
 
 Again, just like the above polymorphic declaration, the mapper will automatically resolve to the corresponding one.
@@ -220,10 +226,12 @@ Will generate the following:
 
 ```ruby
 {
-  id: '12345',
-  email: 'mvilleneuve@snapp.fr',
-  custom_attribute: "Hi, I'm a custom attribute",
-  another_custom_attribute: "2018-09-26 17:49:59 +0200"
+  user: {
+    id: '12345',
+    email: 'mvilleneuve@snapp.fr',
+    custom_attribute: "Hi, I'm a custom attribute",
+    another_custom_attribute: "2018-09-26 17:49:59 +0200"
+  }
 }
 ```
 
@@ -247,6 +255,42 @@ In a Rails controller :
 def index
   render json: UserMapper.with(User.all)
 end
+```
+
+## JSON Root
+
+You can choose to use ActiveMappers with or without a JSON root.
+
+By default, root will be enabled, meaning a UserMapper, will generate a JSON prefixed by :
+
+```ruby
+{
+  user: {}
+}
+```
+
+**Custom Root**
+
+If you want to customize the root name, you can use
+
+```ruby
+UserMapper.with(user, root: :hello)
+```
+
+which will generate :
+
+```ruby
+{
+  hello: {}
+}
+```
+
+**Rootless**
+
+If you do not want to set any root, use :
+
+```ruby
+UserMapper.with(user, rootless: true)
 ```
 
 ## Anything is missing ?
