@@ -1,7 +1,6 @@
 require 'active_support'
 require 'active_support/core_ext/object/try'
 require 'active_support/core_ext/string/inflections'
-require 'active_support/core_ext/string'
 require_relative 'core_ext/hash'
 
 module ActiveMappers
@@ -68,11 +67,13 @@ module ActiveMappers
     end
 
     def self.render_with_root(args, options = {})
-      resource = options[:root] || self.name.gsub('Mapper', '').downcase
+      resource_name = options[:root]
+      resource_name ||= self.name.gsub('Mapper', '').tableize.gsub('/', '_').camelize(:lower)
+      
       if args.respond_to?(:each)
-        { resource.tableize.gsub('/', '_').to_sym => all(args) }
+        { resource_name.to_s.pluralize.to_sym => all(args) }
       else
-        { resource.to_sym => one(args) }
+        { resource_name.to_s.singularize.to_sym => one(args) }
       end
     end
 

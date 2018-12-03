@@ -86,6 +86,15 @@ class ActiveMappersTest < Minitest::Test
     assert_equal 'Michael', RootLessMapper.with(user, rootless: true)[:name]
   end
 
+  class CamelKeyMapper < ActiveMappers::Base
+    attributes :name
+  end
+  def test_root_keys_are_correctly_camelized
+    user = User.new('123', 'Michael', nil)
+    assert CamelKeyMapper.with([user])[:activesTestCamelKeys].is_a? Array
+    assert_equal 'Michael', CamelKeyMapper.with(user)[:activesTestCamelKey][:name]
+  end
+
   def test_core_extensions_work_as_expected
     params = {
       first_name: 'Nathan',
