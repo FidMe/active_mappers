@@ -91,8 +91,8 @@ class ActiveMappersTest < Minitest::Test
   end
   def test_root_keys_are_correctly_camelized
     user = User.new('123', 'Michael', nil)
-    assert CamelKeyMapper.with([user])[:activesTestCamelKeys].is_a? Array
-    assert_equal 'Michael', CamelKeyMapper.with(user)[:activesTestCamelKey][:name]
+    assert CamelKeyMapper.with([user])[:'activesTest/CamelKeys'].is_a? Array
+    assert_equal 'Michael', CamelKeyMapper.with(user)[:'activesTest/CamelKey'][:name]
   end
 
   def test_core_extensions_work_as_expected

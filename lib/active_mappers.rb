@@ -68,7 +68,7 @@ module ActiveMappers
 
     def self.render_with_root(args, options = {})
       resource_name = options[:root]
-      resource_name ||= self.name.gsub('Mapper', '').tableize.gsub('/', '_').camelize(:lower)
+      resource_name ||= self.name.gsub('Mapper', '').tableize.camelize(:lower).gsub('::','/')
       
       if args.respond_to?(:each)
         { resource_name.to_s.pluralize.to_sym => all(args) }
