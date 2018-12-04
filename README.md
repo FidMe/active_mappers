@@ -49,7 +49,7 @@ UserMapper.with(user)
 # }
 ```
 
-### Setup (optionnal)
+### Setup (optional)
 
 You may want to customize some parts of ActiveMappers behavior.
 
