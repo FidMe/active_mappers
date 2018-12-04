@@ -2,6 +2,7 @@ require 'active_support'
 require 'active_support/core_ext/object/try'
 require 'active_support/core_ext/string/inflections'
 require_relative 'core_ext/hash'
+require_relative 'active_mappers/key_transformer'
 
 module ActiveMappers
   class Base
@@ -68,7 +69,7 @@ module ActiveMappers
 
     def self.render_with_root(args, options = {})
       resource_name = options[:root]
-      resource_name ||= self.name.gsub('Mapper', '').tableize.camelize(:lower).gsub('::','/')
+      resource_name ||= KeyTransformer.apply_on(self.name)
       
       if args.respond_to?(:each)
         { resource_name.to_s.pluralize.to_sym => all(args) }
@@ -82,8 +83,11 @@ module ActiveMappers
     end
 
     def self.one(resource)
-      renderers = @@renderers[name].map { |renderer| renderer.call(resource) }
-      renderers.reduce(&:merge).to_lower_camel_case
+      renderers = @@renderers[name].map do |renderer|
+        renderer.call(resource)
+      end.reduce(&:merge)
+
+      KeyTransformer.format_keys(renderers)
     end
   end
 end

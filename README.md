@@ -49,6 +49,58 @@ UserMapper.with(user)
 # }
 ```
 
+### Setup (optionnal)
+
+You may want to customize some parts of ActiveMappers behavior.
+
+If you want to, create an initializer in your project :
+
+```ruby
+# config/initializers/active_mappers.rb
+ActiveMappers::Setup.configure do |config|
+  config.camelcase_keys = false
+  config.ignored_namespaces = [:admin, :back_office]
+end
+```
+
+Here is the list of configurable options
+
+| Option                  | Type      | Default   | Description                                                        |
+| ----------------------- | --------- | --------- | ------------------------------------------------------------------ |
+| `camelcase_keys`        | `boolean` | `true`    | Should keys name be camelcase. Fallback to snake when set to false |
+| `ignored_namespaces`    | `Array`   | `[]`      | Namespaces to ignore when generating json root key name            |
+| `root_keys_transformer` | `Proc`    | See below | Custom way to change a mapper class name into a JSON root key      |
+
+**Root Keys Transformer**
+
+A root key transform is used to transform the mapper class name into a JSON root key name.
+
+For example this mapper class :
+
+```ruby
+class User::ProfileInformationMapper < ActiveMappers::Base
+end
+```
+
+Will automatically resolve to the following json :
+
+```json
+{
+  "user/profileInformation": {}
+}
+```
+
+To customize this behavior you can do the following :
+
+```ruby
+config.root_keys_transformer = proc do |key|
+  # Return any key transform based on the key which is the class name of your mapper
+
+  # The below line transforms User::ProfileInformationMapper to user/profile_informations
+  key.gsub('Mapper', '').tableize
+end
+```
+
 ### Creating a mapper
 
 **Declaring your attributes**
@@ -257,7 +309,7 @@ def index
 end
 ```
 
-## JSON Root
+### JSON Root
 
 You can choose to use ActiveMappers with or without a JSON root.
 
