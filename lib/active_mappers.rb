@@ -32,24 +32,23 @@ module ActiveMappers
 
     def self.relation(key, mapper = nil, optional_path = nil)
       path = optional_path || key
-
       each do |resource|
-        mapper ||= "::#{resource.send(key).class.name}Mapper".constantize
-        { key => mapper.with(path.to_s.split('.').inject(resource, :try), rootless: true) }
+        mapper_to_use = mapper || KeyTransformer.resource_to_mapper(resource.send(key), self)
+        { key => mapper_to_use.with(path.to_s.split('.').inject(resource, :try), rootless: true) }
       end
     end
 
     def self.polymorphic(key)
       each do |resource|
-        resource_mapper = "::#{resource.send("#{key}_type")}Mapper".constantize
+        resource_mapper = "#{KeyTransformer.base_namespace(self)}::#{resource.send("#{key}_type")}Mapper".constantize
         { key => resource_mapper.with(resource.send(key), rootless: true) }
       end
     end
 
     def self.acts_as_polymorph
       each do |resource|
-        mapper = "::#{resource.class}Mapper".constantize
-        mapper.with(resource, rootless: true)
+        mapper = KeyTransformer.resource_to_mapper(resource, self)
+        mapper.with(resource, rootless: true)  
       rescue NameError
         raise NotImplementedError, 'No mapper found for this type of resource'
       end

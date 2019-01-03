@@ -12,6 +12,10 @@ module ActiveMappers
       Setup.camelcase_keys ? hash.to_lower_camel_case : hash
     end
 
+    def self.resource_to_mapper(resource, class_from)
+      "#{base_namespace(class_from)}::#{resource.class.name}Mapper".constantize
+    end
+
     def initialize(name)
       @name = name
     end
@@ -35,6 +39,12 @@ module ActiveMappers
       transformer = Setup.camelcase_keys ? camel_transformer : snake_transformer
 
       (Setup.root_keys_transformer || transformer).call(@name)
+    end
+
+    def self.base_namespace(class_from)
+      base_namespace = class_from.name.split('::')[0] rescue ""
+      base_namespace = '' unless Setup.ignored_namespaces.include?(base_namespace.downcase.to_sym)
+      base_namespace
     end
   end
 end
