@@ -17,7 +17,18 @@ module ActiveMappers
         h
       end
     end
-
+    
+    def self.attachments(*params)
+      include Rails.application.routes.url_helpers
+      each do |resource|
+        h = {}
+        params.each do |param|
+          h[param] = url_for(resource.try(param)) if resource.try(param).try(:attached?)
+        end
+        h
+      end
+    end
+    
     def self.delegate(*params)
       delegator = params.last[:to]
       params.pop
@@ -25,6 +36,20 @@ module ActiveMappers
         h = {}
         params.each do |param|
           h[param] = delegator.to_s.split('.').inject(resource, :try).try(param)
+        end
+        h
+      end
+    end
+
+    def self.delegate_attachments(*params)
+      delegator = params.last[:to]
+      params.pop
+      each do |resource|
+        h = {}
+        params.each do |param| 
+          if delegator.to_s.split('.').inject(resource, :try).try(param).try(:attached?)
+            h[param] = Rails.application.routes.url_helpers.url_for(delegator.to_s.split('.').inject(resource, :try).try(param))
+          end
         end
         h
       end

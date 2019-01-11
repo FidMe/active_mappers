@@ -112,6 +112,14 @@ class UserMapper < ActiveMappers::Base # You must extend ActiveMappers::Base in 
   attributes :id, :email
 end
 ```
+**declaring your attachments**
+
+You may also want to display your Attachments url (introduced by active storage).
+```ruby
+class UserMapper < ActiveMappers::Base # You must extend ActiveMappers::Base in order to use the DSL
+  attachments :avatar
+end
+```
 
 **Delegating your attributes**
 
