@@ -152,6 +152,15 @@ class UserMapper < ActiveMappers::Base
 end
 ```
 
+you can also delegate your attachments with `delegate_attachment` :
+
+```ruby
+class UserMapper < ActiveMappers::Base
+  delegate :first_name, :last_name, to: :profile
+  delegate_attachments :picture to: :profile
+end
+```
+
 **Declaring relationship**
 
 You can declare any type of relationship (`has_one`, `belongs_to`, `has_many`, etc) and the mapper that matches it will automatically be fetched and used.
