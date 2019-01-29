@@ -345,6 +345,40 @@ If you do not want to set any root, use :
 UserMapper.with(user, rootless: true)
 ```
 
+## Adding your own features to Active Mapper DSL
+
+If you want to add specific features to the DSL you can reopen `::ActiveMappers::Base` class and add your own methods.
+The most convenient way to do that is in your Active Mapper initializer following this pattern:
+
+```ruby
+ActiveMappers::Setup.configure do |config|
+  ...
+end
+
+module ActiveMappers
+  class Base
+    include Rails.application.routes.url_helpers
+
+    def self.my_capitalize_dsl_feature(*params)
+      each do |resource|                              #your mapped resource(s)
+        h = {}
+        params.each do |param|
+          h[param] = resource.try(param)&.capitalize  #your treatment
+        end
+        h                                             #the returned hash will be merged to the mapper result.
+      end
+    end
+  end
+end
+```
+and then: 
+
+```ruby
+class UserMapper < ActiveMappers::Base
+  my_capitalize_dsl_feature :civility
+end
+```
+
 ## Anything is missing ?
 
 File an issue
