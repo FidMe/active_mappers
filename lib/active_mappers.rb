@@ -82,6 +82,7 @@ module ActiveMappers
     end
 
     def self.one(resource)
+      return {} if @@renderers[name].nil? # Mapper is empty
       renderers = @@renderers[name].map do |renderer|
         renderer.call(resource)
       end.reduce(&:merge)

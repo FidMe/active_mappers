@@ -95,6 +95,13 @@ class ActiveMappersTest < Minitest::Test
     assert_equal 'Michael', CamelKeyMapper.with(user)[:'activesTest/CamelKey'][:name]
   end
 
+  class EmptyMapper < ActiveMappers::Base
+  end
+  def test_mapper_raises_nothing_when_nothing_is_declared
+    user = User.new('123', 'Michael', nil)
+    assert_equal [{}], EmptyMapper.with([user], rootless: true)
+  end
+
   def test_core_extensions_work_as_expected
     params = {
       first_name: 'Nathan',
