@@ -290,6 +290,44 @@ Will generate the following:
 You can declare any number of `each` in a single mapper.
 Actually, `each` is used to implement every above features.
 
+**Scope**
+
+ActiveMappers does not yet support inheritance. However we provide an even better alternative named `scope`.
+
+Whenever you feel the need to declare more or less attributes based on who called the mapper, you may want to consider using scope.
+
+A very usual use case would be to have a different way to map a resource depending on wether you are an administrator or not.
+Instead of declaring a whole new mapper just to add/remove attributes, you can do the following :
+
+```ruby
+class UserMapper < ActiveMappers::Base
+  attributes :pseudo
+
+  scope :admin
+    attributes :id
+  end
+
+  scope :owner
+    attributes :email
+  end
+end
+
+# This declaration gives you 3 ways to call the mapper
+
+# By an administrator
+UserMapper.with(User.first, scope: :admin)
+# => { pseudo: 'michael33', id: '1234' }
+
+# By anyone
+UserMapper.with(User.first)
+# => { pseudo: 'michael33' }
+
+# Or by the corresponding user that will gain access to personal informations
+UserMapper.with(User.first, scope: :owner)
+# => { pseudo: 'michael33', email: 'mvilleneuve@fidme.com' }
+```
+
+
 ## Using a mapper
 
 Even though there are many ways to declare a mapper, there is only one way to use it

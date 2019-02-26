@@ -7,6 +7,8 @@ require_relative 'active_mappers/key_transformer'
 module ActiveMappers
   class Base
     @@renderers = {}
+    @@initial_renderers = {}
+    @@scopes = {}
 
     def self.attributes(*params)
       each do |resource|
@@ -59,10 +61,36 @@ module ActiveMappers
     end
 
     def self.with(args, options = {})
-      if options[:rootless]
+      evaluate_scopes(options[:scope])
+
+      response = if options[:rootless]
         args.respond_to?(:each) ? all(args) : one(args)
       else
         render_with_root(args, options)
+      end
+
+      reset_renderers_before_scopes
+      response
+    end
+
+    def self.evaluate_scopes(scope_name)
+      @@initial_renderers[name] = [] + (@@renderers[name] || [])
+      return if scope_name.nil?
+
+      found_scope = (@@scopes[name] || []).detect { |s| s[:name] === scope_name }
+      raise "ActiveMappers [#{name}] Scope named #{scope_name} has not been declared or is not a block" if found_scope.nil? || found_scope[:lambda].nil? || !found_scope[:lambda].respond_to?(:call)
+
+      found_scope[:lambda].call
+    end
+
+    def self.scope(*params, &block)
+      raise "ActiveMappers [#{name}] scope must be a bloc" if block.nil? || !block.respond_to?(:call)
+
+      params.each do |param|
+        @@scopes[name] = (@@scopes[name] || []) << {
+          name: param,
+          lambda: block,
+        }
       end
     end
 
@@ -88,6 +116,10 @@ module ActiveMappers
       end.reduce(&:merge)
 
       KeyTransformer.format_keys(renderers)
+    end
+
+    def self.reset_renderers_before_scopes
+      @@renderers[name] = @@initial_renderers[name]
     end
   end
 end
