@@ -20,6 +20,6 @@ class NamespacesTest < Minitest::Test
     exception = assert_raises(RuntimeError) {
       ::NamespacesTest::ScopeMapper.with(user, scope: :dza)
     }
-    assert exception.message.include?('scope named dza has not been declared')
+    assert exception.message.include?('Scope named dza has not been declared')
   end
 end
