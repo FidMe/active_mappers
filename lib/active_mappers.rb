@@ -61,6 +61,8 @@ module ActiveMappers
     end
 
     def self.with(args, options = {})
+      return nil unless args
+
       evaluate_scopes(options[:scope])
 
       response = if options[:rootless]

@@ -63,10 +63,19 @@ class ActiveMappersTest < Minitest::Test
     attributes :name
     relation :friend
   end
+
   def test_relation_can_query_other_mapepr
     friend = Friend.new('124', 'Nicolas', nil)
     user = User.new('123', 'Michael', friend)
     assert_equal 'Nicolas', FriendShipMapper.with(user, root: :user)[:user][:friend][:name]
+  end
+
+  class BusinessSectorMapper < ActiveMappers::Base
+    relation :children, BusinessSectorMapper
+  end
+
+  def test_mapper_called_with_nil_returns_nil
+    assert_nil BusinessSectorMapper.with(nil)
   end
 
   class ProfileMapper < ActiveMappers::Base
