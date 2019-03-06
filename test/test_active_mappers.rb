@@ -75,7 +75,11 @@ class ActiveMappersTest < Minitest::Test
   end
 
   def test_mapper_called_with_nil_returns_nil
-    assert_nil BusinessSectorMapper.with(nil)
+    assert BusinessSectorMapper.with(nil).key?(:'activesTest/BusinessSector')
+    assert_nil BusinessSectorMapper.with(nil)[:'activesTest/BusinessSector']
+    assert_nil BusinessSectorMapper.with(nil, rootless: true)
+    assert_equal [], BusinessSectorMapper.with([nil])[:'activesTest/BusinessSectors']
+    assert_equal [], BusinessSectorMapper.with([nil], rootless: true)
   end
 
   class ProfileMapper < ActiveMappers::Base

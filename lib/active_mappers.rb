@@ -50,7 +50,7 @@ module ActiveMappers
     def self.acts_as_polymorph
       each do |resource|
         mapper = KeyTransformer.resource_to_mapper(resource, self)
-        mapper.with(resource, rootless: true)  
+        mapper.with(resource, rootless: true)
       rescue NameError
         raise NotImplementedError, 'No mapper found for this type of resource'
       end
@@ -61,8 +61,6 @@ module ActiveMappers
     end
 
     def self.with(args, options = {})
-      return nil unless args
-
       evaluate_scopes(options[:scope])
 
       response = if options[:rootless]
@@ -108,10 +106,11 @@ module ActiveMappers
     end
 
     def self.all(collection)
-      collection.map { |el| one(el) }
+      collection.map { |el| one(el) }.compact
     end
 
     def self.one(resource)
+      return nil unless resource
       return {} if @@renderers[name].nil? # Mapper is empty
       renderers = @@renderers[name].map do |renderer|
         renderer.call(resource)
