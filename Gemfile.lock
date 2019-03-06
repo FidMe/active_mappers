@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    active_mappers (1.1.0)
+    active_mappers (1.1.1)
       activesupport (>= 4.2)
 
 GEM
