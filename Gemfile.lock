@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    active_mappers (1.1.1)
+    active_mappers (1.2.0)
       activesupport (>= 4.2)
 
 GEM
@@ -13,7 +13,7 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     concurrent-ruby (1.1.4)
-    i18n (1.5.3)
+    i18n (1.6.0)
       concurrent-ruby (~> 1.0)
     minitest (5.11.3)
     rake (12.3.1)
