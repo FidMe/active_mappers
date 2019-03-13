@@ -177,6 +177,15 @@ It will generate something like
 
 It also works with namespaced resources.
 
+If you need you can specify more options :
+
+```ruby
+class UserMapper < ActiveMappers::Base
+  relation :account, AccountMapper, scope: :admin 
+end
+
+
+
 **Declaring polymorphic relationships**
 
 Consider the following polymorphic relation :
