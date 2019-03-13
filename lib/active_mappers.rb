@@ -32,11 +32,11 @@ module ActiveMappers
       end
     end
 
-    def self.relation(key, mapper = nil, optional_path = nil)
-      path = optional_path || key
+    def self.relation(key, mapper = nil, options = {})
+      path = options[:optional_path] || key
       each do |resource|
         mapper_to_use = mapper || KeyTransformer.resource_to_mapper(resource.send(key), self)
-        { key => mapper_to_use.with(path.to_s.split('.').inject(resource, :try), rootless: true) }
+        { key => mapper_to_use.with(path.to_s.split('.').inject(resource, :try), options.merge(rootless: true)) }
       end
     end
 
@@ -68,7 +68,6 @@ module ActiveMappers
       else
         render_with_root(args, options)
       end
-
       reset_renderers_before_scopes
       response
     end

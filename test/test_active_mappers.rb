@@ -59,15 +59,46 @@ class ActiveMappersTest < Minitest::Test
     assert_equal 'lola', UserMapper.with(user)[:user][:lola]
   end
 
-  class FriendShipMapper < ActiveMappers::Base
+  class FriendLolMapper < ActiveMappers::Base
     attributes :name
-    relation :friend
+
+    scope :lol do
+      attributes :id
+    end
   end
 
-  def test_relation_can_query_other_mapepr
+  class FriendShipLolMapper < ActiveMappers::Base
+    attributes :name
+    relation :friend, FriendLolMapper, scope: :lol
+
+    scope :admin do
+      attributes :id
+    end
+  end
+
+  class FriendShipMapper < ActiveMappers::Base
+    attributes :name
+    relation :friend, FriendShipMapper
+
+    scope :admin do
+      attributes :id
+    end
+  end
+
+  def test_relation_can_query_other_mapper
     friend = Friend.new('124', 'Nicolas', nil)
     user = User.new('123', 'Michael', friend)
     assert_equal 'Nicolas', FriendShipMapper.with(user, root: :user)[:user][:friend][:name]
+  end
+
+  def test_relation_takes_optional_hash
+    friend = Friend.new('124', 'Nicolas', nil)
+    user = User.new('123', 'Michael', friend)
+    mapper = FriendShipLolMapper.with(user, root: :user)[:user]
+
+    assert_equal 'Nicolas', mapper[:friend][:name]
+    assert_equal '124', mapper[:friend][:id]
+    assert_nil mapper[:id]
   end
 
   class BusinessSectorMapper < ActiveMappers::Base
