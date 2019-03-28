@@ -117,6 +117,8 @@ class ActiveMappersTest < Minitest::Test
     assert_nil mapper[:id]
   end
 
+    ################################################
+
   class Car
     attr_accessor :id, :name, :driver
 
@@ -168,6 +170,50 @@ class ActiveMappersTest < Minitest::Test
     assert_equal 2, CarMapper.with(car, root: :car)[:car][:driver].size
   end
 
+  ################################################
+
+  class Human
+    attr_accessor :id, :name, :cat
+
+    def initialize(id, name, cat = nil)
+      @id = id
+      @name = name
+      @cat = cat
+    end
+  end
+
+  class Cat
+    attr_accessor :id, :name
+
+    def initialize(id, name)
+      @id = id
+      @name = name
+    end
+  end
+
+  class HumanMapper < ActiveMappers::Base
+    attributes :id, :name
+    relation :cat
+  end
+
+  class CatMapper
+  end
+  
+  def test_returns_should_be_a_mapper_error_when_invalid_mapper
+    reflection = Struct.new(:class_name)
+    Class.any_instance.stubs(:reflect_on_association).returns(reflection.new('ActiveMappersTest::Cat'))
+
+    cat = Cat.new('124', 'Nathan')
+    human = Human.new('124', 'Aniss', cat)
+
+    error = assert_raises RuntimeError do
+      HumanMapper.with(human)
+    end
+    assert_equal "'ActiveMappersTest::CatMapper' should be a mapper", error.message
+  end
+
+  ################################################
+
   class Owner
     attr_accessor :id, :name, :dog
 
@@ -202,7 +248,7 @@ class ActiveMappersTest < Minitest::Test
     error = assert_raises RuntimeError do
       OwnerMapper.with(owner)
     end
-    assert_match /undefined relation : dogsq/, error.message
+    assert_match 'undefined relation : dogsq', error.message
   end
 
 
@@ -242,7 +288,7 @@ class ActiveMappersTest < Minitest::Test
     error = assert_raises RuntimeError do
       ComputerMapper.with(computer)
     end
-    assert_match /undefined mapper: '::MouseMapper'/, error.message 
+    assert_equal "undefined mapper: '::MouseMapper'", error.message
   end
 
   ################################################
