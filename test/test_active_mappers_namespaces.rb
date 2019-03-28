@@ -24,6 +24,9 @@ class NamespacesTest < Minitest::Test
   end
 
   def test_relation_is_model_context_dependant_by_default
+    reflection = Struct.new(:class_name)
+    Class.any_instance.stubs(:reflect_on_association).returns(reflection.new('Friend'))
+
     ::ActiveMappers::Setup.ignored_namespaces = []
 
     friend = Friend.new('124', 'Nicolas', nil)
@@ -34,6 +37,9 @@ class NamespacesTest < Minitest::Test
 
   def test_relation_is_namespace_context_dependant_for_ignored_namespaces
     ::ActiveMappers::Setup.ignored_namespaces = [:namespacestest]
+
+    reflection = Struct.new(:class_name)
+    Class.any_instance.stubs(:reflect_on_association).returns(reflection.new("Friend"))
 
     friend = Friend.new('124', 'Nicolas', nil)
     user = User.new('123', 'Michael', friend)

@@ -32,10 +32,15 @@ module ActiveMappers
       end
     end
 
-    def self.relation(key, mapper = nil, options = {})
+    def self.relation(key, mapper = nil, **options)
       path = options[:optional_path] || key
       each do |resource|
-        mapper_to_use = mapper || KeyTransformer.resource_to_mapper(resource.send(key), self)
+        relation_class_name = resource.class&.reflect_on_association(options[:optional_path] || key)&.class_name
+        raise "undefined relation : #{key.to_s}" if (mapper.nil? && relation_class_name.nil?)
+
+        mapper_to_use = mapper || KeyTransformer.resource_class_to_mapper(relation_class_name, self)       
+        raise "'#{mapper_to_use.name}' should be a mapper" unless mapper_to_use.ancestors.map(&:to_s).include?("ActiveMappers::Base")
+        
         { key => mapper_to_use.with(path.to_s.split('.').inject(resource, :try), options.merge(rootless: true)) }
       end
     end
