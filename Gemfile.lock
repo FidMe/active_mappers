@@ -3,6 +3,7 @@ PATH
   specs:
     active_mappers (1.2.1)
       activesupport (>= 4.2)
+      mocha (>= 1.8.0)
 
 GEM
   remote: https://rubygems.org/
@@ -15,7 +16,10 @@ GEM
     concurrent-ruby (1.1.5)
     i18n (1.6.0)
       concurrent-ruby (~> 1.0)
+    metaclass (0.0.4)
     minitest (5.11.3)
+    mocha (1.8.0)
+      metaclass (~> 0.0.1)
     rake (12.3.1)
     thread_safe (0.3.6)
     tzinfo (1.2.5)

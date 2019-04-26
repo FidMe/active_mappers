@@ -15,4 +15,5 @@ Gem::Specification.new do |s|
   ]
   s.license     = 'MIT'
   s.add_runtime_dependency(%q<activesupport>, [">= 4.2"])
+  s.add_runtime_dependency(%q<mocha>, [">= 1.8.0"])
 end
