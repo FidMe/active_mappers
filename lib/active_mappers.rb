@@ -78,8 +78,8 @@ module ActiveMappers
     end
 
     def self.evaluate_scopes(scope_name)
-      @@initial_renderers[name] = @@initial_renderers[name] ? @@initial_renderers[name] : [] + (@@renderers[name] || [])
       return if scope_name.nil?
+      @@initial_renderers[name] = @@initial_renderers[name] ? @@initial_renderers[name] : [] + (@@renderers[name] || [])
       
       found_scope = (@@scopes[name] || []).detect { |s| s[:name] === scope_name }
       raise "ActiveMappers [#{name}] Scope named #{scope_name} has not been declared or is not a block" if found_scope.nil? || found_scope[:lambda].nil? || !found_scope[:lambda].respond_to?(:call)
@@ -124,7 +124,8 @@ module ActiveMappers
     end
 
     def self.reset_renderers_before_scopes
-      @@renderers[name] = @@initial_renderers[name]
+      return if !@@initial_renderers || !@@initial_renderers[name]
+      @@renderers[name] = @@initial_renderers[name].dup
     end
   end
 end
