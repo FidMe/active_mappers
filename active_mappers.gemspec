@@ -7,12 +7,10 @@ Gem::Specification.new do |s|
   s.authors     = ['Michaël Villeneuve']
   s.homepage    = 'https://github.com/fidme/active_mappers'
   s.email       = 'contact@michaelvilleneuve.fr'
-  s.files       = [
-    'lib/core_ext/hash.rb',
-    'lib/active_mappers.rb',
-    'lib/active_mappers/key_transformer.rb',
-    'lib/active_mappers/setup.rb'
-  ]
+  s.files = Dir.chdir(File.expand_path('..', __FILE__)) do
+    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
+  end
+
   s.license = 'MIT'
   s.add_runtime_dependency('activesupport', ['>= 4.2'])
   s.add_runtime_dependency('method_source', ['~> 0.9.2'])
