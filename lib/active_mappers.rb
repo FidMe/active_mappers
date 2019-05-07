@@ -1,14 +1,23 @@
+require 'method_source'
+require 'ruby2ruby'
+require 'ruby_parser'
+
 require 'active_support'
 require 'active_support/core_ext/object/try'
+require 'active_support/core_ext/hash/except'
 require 'active_support/core_ext/string/inflections'
 require_relative 'core_ext/hash'
 require_relative 'active_mappers/key_transformer'
 
+require_relative 'handlers/inheritance'
+
 module ActiveMappers
   class Base
     @@renderers = {}
-    @@initial_renderers = {}
-    @@scopes = {}
+
+    def self.inherited(subclass)
+      Handlers::Inheritance.new(subclass, self).handle
+    end
 
     def self.attributes(*params)
       each do |resource|
@@ -66,36 +75,28 @@ module ActiveMappers
     end
 
     def self.with(args, options = {})
-      evaluate_scopes(options[:scope])
-
+      return evaluate_scopes(args, options) unless options[:scope].nil?
+      
       response = if options[:rootless]
         args.respond_to?(:each) ? all(args) : one(args)
       else
         render_with_root(args, options)
       end
       response
-    ensure
-      reset_renderers_before_scopes if !options[:scope].nil?
     end
 
-    def self.evaluate_scopes(scope_name)
-      return if scope_name.nil?
-      @@initial_renderers[name] = @@initial_renderers[name] ? @@initial_renderers[name] : [] + (@@renderers[name] || [])
-      
-      found_scope = (@@scopes[name] || []).detect { |s| s[:name] === scope_name }
-      raise "ActiveMappers [#{name}] Scope named #{scope_name} has not been declared or is not a block" if found_scope.nil? || found_scope[:lambda].nil? || !found_scope[:lambda].respond_to?(:call)
-      
-      found_scope[:lambda].call
+    def self.evaluate_scopes(args, options)
+      class_to_call = "::#{name}Scope#{options[:scope].capitalize}".constantize rescue raise("ActiveMappers [#{name}] No scope named #{options[:scope]} found")
+      return class_to_call.with(args, options.except(:scope))
     end
 
     def self.scope(*params, &block)
       raise "ActiveMappers [#{name}] scope must be a bloc" if block.nil? || !block.respond_to?(:call)
 
+      
       params.each do |param|
-        @@scopes[name] = (@@scopes[name] || []) << {
-          name: param,
-          lambda: block,
-        }
+        block_content = Ruby2Ruby.new.process(RubyParser.new.process(block.source).to_a.last)
+        eval("class ::#{name}Scope#{param.capitalize} < ::#{name} ; #{block_content}; end")
       end
     end
 
@@ -122,11 +123,6 @@ module ActiveMappers
       end.reduce(&:merge)
 
       KeyTransformer.format_keys(renderers)
-    end
-
-    def self.reset_renderers_before_scopes
-      return if !@@initial_renderers || !@@initial_renderers[name]
-      @@renderers[name] = @@initial_renderers[name].dup
     end
   end
 end

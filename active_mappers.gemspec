@@ -15,5 +15,8 @@ Gem::Specification.new do |s|
   ]
   s.license = 'MIT'
   s.add_runtime_dependency('activesupport', ['>= 4.2'])
+  s.add_runtime_dependency('method_source', ['~> 0.9.2'])
   s.add_runtime_dependency('mocha', ['>= 1.8.0'])
+  s.add_runtime_dependency('ruby2ruby', ['> 2.4.0'])
+  s.add_runtime_dependency('ruby_parser', ['~> 3.1'])
 end
