@@ -7,9 +7,9 @@ require 'active_support/core_ext/object/try'
 require 'active_support/core_ext/hash/except'
 require 'active_support/core_ext/string/inflections'
 require_relative 'core_ext/hash'
+require_relative 'active_mappers/handlers/inheritance'
 require_relative 'active_mappers/key_transformer'
 
-require_relative 'handlers/inheritance'
 
 module ActiveMappers
   class Base
