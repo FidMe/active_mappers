@@ -32,6 +32,7 @@ module ActiveMappers
       Setup.ignored_namespaces.each do |namespace|
         @name.gsub!("#{namespace.to_s.capitalize}::", '')
       end
+      @name = @name.split('MapperScope')[0]
       self
     end
 
