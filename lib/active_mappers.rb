@@ -73,8 +73,9 @@ module ActiveMappers
       else
         render_with_root(args, options)
       end
-      reset_renderers_before_scopes
       response
+    ensure
+      reset_renderers_before_scopes if !options[:scope].nil?
     end
 
     def self.evaluate_scopes(scope_name)

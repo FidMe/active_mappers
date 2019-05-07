@@ -30,6 +30,23 @@ class NamespacesTest < Minitest::Test
     end
   end
 
+  class RewardMapper < ActiveMappers::Base
+    attributes :name, :id
+
+    scope :and_stamps do
+      relation :stamps, BusinessSectorMapper
+    end
+  end
+
+  class StampMapper < ActiveMappers::Base
+    attributes :name, :id
+
+    scope :and_reward do
+      relation :reward, RewardMapper
+      sleep 5
+    end
+  end
+
   class BusinessSector
     attr_accessor :id, :name, :children
 
@@ -37,7 +54,6 @@ class NamespacesTest < Minitest::Test
       @id, @name, @children = id, name, children
     end
   end
-
   def test_scopes_allow_to_scope_dsl_declarations
     reflection = Struct.new(:class_name)
 
