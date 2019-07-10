@@ -10,7 +10,7 @@ There are multiple solutions out on the market, here is a quick overview of each
 | Solution                 | Pros                                                                               | Cons                                                  |
 | ------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------- |
 | JBuilder                 | Simple, easy, integrates with the default View layer                               | Very slow, dedicated to JSON                          |
-| Active Model Serializers | Simple, easy to declare                                                            | Can be hard to customize, slow, project is abandonned |
+| Active Model Serializers | Simple, easy to declare                                                            | Can be hard to customize, slow, project is abandoned |
 | fast_json_api            | As simple as AMS, fast                                                             | Hard to customize, JSONAPI standard is required       |
 | ActiveMappers            | Blazing fast, Easy to declare/customize, works with any format output (JSON, Hash) | Limited number of options (for now)                   |
 
