@@ -32,7 +32,7 @@ Then, depending on your usage you may want to create an `app/mappers` folder in 
 
 You will put all your mappers inside of it.
 
-## Usage
+## Basic usage
 
 ```ruby
 UserMapper.with(user)
@@ -49,7 +49,7 @@ UserMapper.with(user)
 # }
 ```
 
-### Setup (optional)
+## Setup (optional)
 
 You may want to customize some parts of ActiveMappers behavior.
 
@@ -71,7 +71,7 @@ Here is the list of configurable options
 | `ignored_namespaces`    | `Array`   | `[]`      | Namespaces to ignore when generating json root key name            |
 | `root_keys_transformer` | `Proc`    | See below | Custom way to change a mapper class name into a JSON root key      |
 
-**Root Keys Transformer**
+### Root Keys Transformer
 
 A root key transform is used to transform the mapper class name into a JSON root key name.
 
@@ -101,9 +101,9 @@ config.root_keys_transformer = proc do |key|
 end
 ```
 
-### Creating a mapper
+## API
 
-**Declaring your attributes**
+### Declaring your attributes
 
 Most basic usage, just declare the attributes you want to display.
 
@@ -113,7 +113,7 @@ class UserMapper < ActiveMappers::Base # You must extend ActiveMappers::Base in 
 end
 ```
 
-**Delegating your attributes**
+### Delegating your attributes
 
 Say you have a model with the following structure :
 
@@ -144,7 +144,7 @@ class UserMapper < ActiveMappers::Base
 end
 ```
 
-**Declaring relationship**
+### Declaring relationship
 
 You can declare any type of relationship (`has_one`, `belongs_to`, `has_many`, etc) and the mapper that matches it will automatically be fetched and used.
 
@@ -179,14 +179,13 @@ It also works with namespaced resources.
 
 If you need you can specify more options :
 
-````ruby
+```ruby
 class UserMapper < ActiveMappers::Base
   relation :account, AccountMapper, scope: :admin
 end
+```
 
-
-
-**Declaring polymorphic relationships**
+### Declaring polymorphic relationships
 
 Consider the following polymorphic relation :
 
@@ -202,7 +201,7 @@ end
 class NormalUser
   has_many :posts, class_name: 'Post', as: :author
 end
-````
+```
 
 In order to use the `author` polymorphic attribute in your `PostMapper` you need to declare the following :
 
@@ -226,7 +225,7 @@ end
 
 Then, based of the `XXX_type` column, the mapper will automatically resolve to either `AdminUserMapper` or `NormalUserMapper`
 
-**Rendering a collection of different classes**
+### Rendering a collection of different classes
 
 Say you want to render many resources with a single Mapper
 
@@ -266,7 +265,7 @@ Will generate the following :
 
 Again, just like the above polymorphic declaration, the mapper will automatically resolve to the corresponding one.
 
-**Custom Attributes**
+### Custom Attributes
 
 If you need to implement custom attributes you can always use the `each` statement.
 
@@ -299,7 +298,7 @@ Will generate the following:
 You can declare any number of `each` in a single mapper.
 Actually, `each` is used to implement every above features.
 
-**Context**
+### Context
 
 In most cases declaring your mapper with your resource should be enough. However, sometimes you may need to give your mapper a context in order to allow it to resolve a method or something else.
 
@@ -317,7 +316,7 @@ end
 RewardMapper.with(reward, context: user)
 ```
 
-**Scope**
+### Scope
 
 ActiveMappers does not yet support inheritance. However we provide an even better alternative named `scope`.
 
@@ -385,7 +384,7 @@ By default, root will be enabled, meaning a UserMapper, will generate a JSON pre
 }
 ```
 
-**Custom Root**
+### Custom Root
 
 If you want to customize the root name, you can use
 
@@ -401,7 +400,7 @@ which will generate :
 }
 ```
 
-**Rootless**
+### Rootless
 
 If you do not want to set any root, use :
 
