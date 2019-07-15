@@ -7,12 +7,12 @@ If you have ever done Rails API development, you must have considered using a la
 
 There are multiple solutions out on the market, here is a quick overview of each :
 
-| Solution                 | Pros                                                                               | Cons                                                  |
-| ------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| JBuilder                 | Simple, easy, integrates with the default View layer                               | Very slow, dedicated to JSON                          |
+| Solution                 | Pros                                                                               | Cons                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| JBuilder                 | Simple, easy, integrates with the default View layer                               | Very slow, dedicated to JSON                         |
 | Active Model Serializers | Simple, easy to declare                                                            | Can be hard to customize, slow, project is abandoned |
-| fast_json_api            | As simple as AMS, fast                                                             | Hard to customize, JSONAPI standard is required       |
-| ActiveMappers            | Blazing fast, Easy to declare/customize, works with any format output (JSON, Hash) | Limited number of options (for now)                   |
+| fast_json_api            | As simple as AMS, fast                                                             | Hard to customize, JSONAPI standard is required      |
+| ActiveMappers            | Blazing fast, Easy to declare/customize, works with any format output (JSON, Hash) | Limited number of options (for now)                  |
 
 ## Installation
 
@@ -179,9 +179,9 @@ It also works with namespaced resources.
 
 If you need you can specify more options :
 
-```ruby
+````ruby
 class UserMapper < ActiveMappers::Base
-  relation :account, AccountMapper, scope: :admin 
+  relation :account, AccountMapper, scope: :admin
 end
 
 
@@ -202,7 +202,7 @@ end
 class NormalUser
   has_many :posts, class_name: 'Post', as: :author
 end
-```
+````
 
 In order to use the `author` polymorphic attribute in your `PostMapper` you need to declare the following :
 
@@ -299,6 +299,24 @@ Will generate the following:
 You can declare any number of `each` in a single mapper.
 Actually, `each` is used to implement every above features.
 
+**Context**
+
+In most cases declaring your mapper with your resource should be enough. However, sometimes you may need to give your mapper a context in order to allow it to resolve a method or something else.
+
+At fidme we found a use case where we need to send an instance of a user along with a mapper in order to call a model method with user as params.
+
+To solve this use case we use the context option, for instance :
+
+```ruby
+class RewardMapper < ActiveMappers::Base
+  each do |reward, context|
+    { user_reward: reward.of_user(context) }
+  end
+end
+
+RewardMapper.with(reward, context: user)
+```
+
 **Scope**
 
 ActiveMappers does not yet support inheritance. However we provide an even better alternative named `scope`.
@@ -335,7 +353,6 @@ UserMapper.with(User.first)
 UserMapper.with(User.first, scope: :owner)
 # => { pseudo: 'michael33', email: 'mvilleneuve@fidme.com' }
 ```
-
 
 ## Using a mapper
 
@@ -418,7 +435,8 @@ module ActiveMappers
   end
 end
 ```
-and then: 
+
+and then:
 
 ```ruby
 class UserMapper < ActiveMappers::Base

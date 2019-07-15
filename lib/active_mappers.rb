@@ -78,7 +78,7 @@ module ActiveMappers
       return evaluate_scopes(args, options) unless options[:scope].nil?
       
       response = if options[:rootless]
-        args.respond_to?(:each) ? all(args) : one(args)
+        args.respond_to?(:each) ? all(args, options[:context]) : one(args, options[:context])
       else
         render_with_root(args, options)
       end
@@ -105,21 +105,21 @@ module ActiveMappers
       resource_name ||= KeyTransformer.apply_on(self.name)
       
       if args.respond_to?(:each)
-        { resource_name.to_s.pluralize.to_sym => all(args) }
+        { resource_name.to_s.pluralize.to_sym => all(args, options[:context]) }
       else
-        { resource_name.to_s.singularize.to_sym => one(args) }
+        { resource_name.to_s.singularize.to_sym => one(args, options[:context]) }
       end
     end
 
-    def self.all(collection)
-      collection.map { |el| one(el) }.compact
+    def self.all(collection, context = nil)
+      collection.map { |el| one(el, context) }.compact
     end
 
-    def self.one(resource)
+    def self.one(resource, context = nil)
       return nil unless resource
       return {} if @@renderers[name].nil? # Mapper is empty
       renderers = @@renderers[name].map do |renderer|
-        renderer.call(resource)
+        renderer.call(resource, context)
       end.reduce(&:merge)
 
       KeyTransformer.format_keys(renderers)

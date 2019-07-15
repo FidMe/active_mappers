@@ -338,6 +338,17 @@ class ActiveMappersTest < Minitest::Test
     user = User.new('123', 'Michael', nil)
     assert_equal [{}], EmptyMapper.with([user], rootless: true)
   end
+  
+  class WithContextMapper < ActiveMappers::Base
+    each do |user, context|
+      { context: context }
+    end
+  end
+  def test_can_pass_a_context_on_mapper
+    user = User.new('123', 'Michael', nil)
+
+    assert_equal 'coucou', WithContextMapper.with(user, context: 'coucou', rootless: true)[:context]
+  end
 
   def test_core_extensions_work_as_expected
     params = {
