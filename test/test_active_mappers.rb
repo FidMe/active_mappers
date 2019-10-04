@@ -3,6 +3,7 @@ require 'active_mappers'
 
 class UserMapper < ActiveMappers::Base
   attributes :id
+  polymorphic :content
 
   each do
     { lol: 'lol' }
@@ -18,10 +19,14 @@ class FriendMapper < ActiveMappers::Base
 end
 
 class User
-  attr_accessor :id, :name, :friend
+  attr_accessor :id, :name, :friend, :content_type, :content_id
 
-  def initialize(id, name, friend = nil)
-    @id, @name, @friend = id, name, friend
+  def content
+    Friend.new(@content_id, 'Henri', nil)
+  end
+
+  def initialize(id, name, friend = nil, content_type = nil, content_id = nil)
+    @id, @name, @friend, @content_type, @content_id = id, name, friend, content_type, content_id
   end
 end
 
@@ -47,6 +52,11 @@ class ActiveMappersTest < Minitest::Test
   def test_can_render_a_single_resource
     user = User.new('123', 'Michael', nil)
     assert_equal user.id, UserMapper.with(user)[:user][:id]
+  end
+
+  def test_can_render_a_polymorphic_resource
+    user = User.new('123', 'Michael', nil, "Friend", '1')
+    assert_equal user.content.name, UserMapper.with(user)[:user][:content][:name]
   end
 
   def test_each_can_be_used_to_declare_custom_attrs
