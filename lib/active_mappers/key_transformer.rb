@@ -16,6 +16,14 @@ module ActiveMappers
       "#{base_namespace(class_from)}::#{resource.class.name}Mapper".constantize
     end
 
+    def self.resource_class_to_mapper(resource_class_name, class_from)
+      resource_class_name[0..1] = '' if resource_class_name.start_with?('::')
+      
+      "#{base_namespace(class_from)}::#{resource_class_name}Mapper".constantize
+    rescue NameError
+      raise "undefined mapper: '#{base_namespace(class_from)}::#{resource_class_name}Mapper'"
+    end
+
     def initialize(name)
       @name = name
     end
@@ -24,6 +32,7 @@ module ActiveMappers
       Setup.ignored_namespaces.each do |namespace|
         @name.gsub!("#{namespace.to_s.capitalize}::", '')
       end
+      @name = @name.split('MapperScope')[0]
       self
     end
 
@@ -44,6 +53,7 @@ module ActiveMappers
     def self.base_namespace(class_from)
       base_namespace = class_from.name.split('::')[0] rescue ""
       base_namespace = '' unless Setup.ignored_namespaces.include?(base_namespace.downcase.to_sym)
+
       base_namespace
     end
   end

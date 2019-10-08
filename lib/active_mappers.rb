@@ -1,14 +1,23 @@
+require 'method_source'
+require 'ruby2ruby'
+require 'ruby_parser'
+
 require 'active_support'
 require 'active_support/core_ext/object/try'
+require 'active_support/core_ext/hash/except'
 require 'active_support/core_ext/string/inflections'
 require_relative 'core_ext/hash'
+require_relative 'active_mappers/handlers/inheritance'
 require_relative 'active_mappers/key_transformer'
+
 
 module ActiveMappers
   class Base
     @@renderers = {}
-    @@initial_renderers = {}
-    @@scopes = {}
+
+    def self.inherited(subclass)
+      Handlers::Inheritance.new(subclass, self).handle
+    end
 
     def self.attributes(*params)
       each do |resource|
@@ -32,11 +41,16 @@ module ActiveMappers
       end
     end
 
-    def self.relation(key, mapper = nil, optional_path = nil)
-      path = optional_path || key
+    def self.relation(key, mapper = nil, **options)
+      path = options[:optional_path] || key
       each do |resource|
-        mapper_to_use = mapper || KeyTransformer.resource_to_mapper(resource.send(key), self)
-        { key => mapper_to_use.with(path.to_s.split('.').inject(resource, :try), rootless: true) }
+        relation_class_name = resource.class&.reflect_on_association(options[:optional_path] || key)&.class_name
+        raise "undefined relation : #{key.to_s}" if (mapper.nil? && relation_class_name.nil?)
+
+        mapper_to_use = mapper || KeyTransformer.resource_class_to_mapper(relation_class_name, self)       
+        raise "'#{mapper_to_use.name}' should be a mapper" unless mapper_to_use.ancestors.map(&:to_s).include?("ActiveMappers::Base")
+        
+        { key => mapper_to_use.with(path.to_s.split('.').inject(resource, :try), options.merge(rootless: true)) }
       end
     end
 
@@ -54,7 +68,7 @@ module ActiveMappers
     def self.acts_as_polymorph
       each do |resource|
         mapper = KeyTransformer.resource_to_mapper(resource, self)
-        mapper.with(resource, rootless: true)  
+        mapper.with(resource, rootless: true)
       rescue NameError
         raise NotImplementedError, 'No mapper found for this type of resource'
       end
@@ -65,36 +79,28 @@ module ActiveMappers
     end
 
     def self.with(args, options = {})
-      evaluate_scopes(options[:scope])
-
+      return evaluate_scopes(args, options) unless options[:scope].nil?
+      
       response = if options[:rootless]
-        args.respond_to?(:each) ? all(args) : one(args)
+        args.respond_to?(:each) ? all(args, options[:context]) : one(args, options[:context])
       else
         render_with_root(args, options)
       end
-
-      reset_renderers_before_scopes
       response
     end
 
-    def self.evaluate_scopes(scope_name)
-      @@initial_renderers[name] = [] + (@@renderers[name] || [])
-      return if scope_name.nil?
-
-      found_scope = (@@scopes[name] || []).detect { |s| s[:name] === scope_name }
-      raise "ActiveMappers [#{name}] Scope named #{scope_name} has not been declared or is not a block" if found_scope.nil? || found_scope[:lambda].nil? || !found_scope[:lambda].respond_to?(:call)
-
-      found_scope[:lambda].call
+    def self.evaluate_scopes(args, options)
+      class_to_call = "::#{name}Scope#{options[:scope].capitalize}".constantize rescue raise("ActiveMappers [#{name}] No scope named #{options[:scope]} found")
+      return class_to_call.with(args, options.except(:scope))
     end
 
     def self.scope(*params, &block)
       raise "ActiveMappers [#{name}] scope must be a bloc" if block.nil? || !block.respond_to?(:call)
 
+      
       params.each do |param|
-        @@scopes[name] = (@@scopes[name] || []) << {
-          name: param,
-          lambda: block,
-        }
+        block_content = Ruby2Ruby.new.process(RubyParser.new.process(block.source).to_a.last)
+        eval("class ::#{name}Scope#{param.capitalize} < ::#{name} ; #{block_content}; end")
       end
     end
 
@@ -103,27 +109,24 @@ module ActiveMappers
       resource_name ||= KeyTransformer.apply_on(self.name)
       
       if args.respond_to?(:each)
-        { resource_name.to_s.pluralize.to_sym => all(args) }
+        { resource_name.to_s.pluralize.to_sym => all(args, options[:context]) }
       else
-        { resource_name.to_s.singularize.to_sym => one(args) }
+        { resource_name.to_s.singularize.to_sym => one(args, options[:context]) }
       end
     end
 
-    def self.all(collection)
-      collection.map { |el| one(el) }
+    def self.all(collection, context = nil)
+      collection.map { |el| one(el, context) }.compact
     end
 
-    def self.one(resource)
+    def self.one(resource, context = nil)
+      return nil unless resource
       return {} if @@renderers[name].nil? # Mapper is empty
       renderers = @@renderers[name].map do |renderer|
-        renderer.call(resource)
+        renderer.call(resource, context)
       end.reduce(&:merge)
 
       KeyTransformer.format_keys(renderers)
-    end
-
-    def self.reset_renderers_before_scopes
-      @@renderers[name] = @@initial_renderers[name]
     end
   end
 end

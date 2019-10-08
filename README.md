@@ -7,12 +7,12 @@ If you have ever done Rails API development, you must have considered using a la
 
 There are multiple solutions out on the market, here is a quick overview of each :
 
-| Solution                 | Pros                                                                               | Cons                                                  |
-| ------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| JBuilder                 | Simple, easy, integrates with the default View layer                               | Very slow, dedicated to JSON                          |
-| Active Model Serializers | Simple, easy to declare                                                            | Can be hard to customize, slow, project is abandonned |
-| fast_json_api            | As simple as AMS, fast                                                             | Hard to customize, JSONAPI standard is required       |
-| ActiveMappers            | Blazing fast, Easy to declare/customize, works with any format output (JSON, Hash) | Limited number of options (for now)                   |
+| Solution                 | Pros                                                                               | Cons                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| JBuilder                 | Simple, easy, integrates with the default View layer                               | Very slow, dedicated to JSON                         |
+| Active Model Serializers | Simple, easy to declare                                                            | Can be hard to customize, slow, project is abandoned |
+| fast_json_api            | As simple as AMS, fast                                                             | Hard to customize, JSONAPI standard is required      |
+| ActiveMappers            | Blazing fast, Easy to declare/customize, works with any format output (JSON, Hash) | Limited number of options (for now)                  |
 
 ## Installation
 
@@ -32,7 +32,7 @@ Then, depending on your usage you may want to create an `app/mappers` folder in 
 
 You will put all your mappers inside of it.
 
-## Usage
+## Basic usage
 
 ```ruby
 UserMapper.with(user)
@@ -49,7 +49,7 @@ UserMapper.with(user)
 # }
 ```
 
-### Setup (optional)
+## Setup (optional)
 
 You may want to customize some parts of ActiveMappers behavior.
 
@@ -71,7 +71,7 @@ Here is the list of configurable options
 | `ignored_namespaces`    | `Array`   | `[]`      | Namespaces to ignore when generating json root key name            |
 | `root_keys_transformer` | `Proc`    | See below | Custom way to change a mapper class name into a JSON root key      |
 
-**Root Keys Transformer**
+### Root Keys Transformer
 
 A root key transform is used to transform the mapper class name into a JSON root key name.
 
@@ -101,9 +101,9 @@ config.root_keys_transformer = proc do |key|
 end
 ```
 
-### Creating a mapper
+## API
 
-**Declaring your attributes**
+### Declaring your attributes
 
 Most basic usage, just declare the attributes you want to display.
 
@@ -113,7 +113,7 @@ class UserMapper < ActiveMappers::Base # You must extend ActiveMappers::Base in 
 end
 ```
 
-**Delegating your attributes**
+### Delegating your attributes
 
 Say you have a model with the following structure :
 
@@ -144,7 +144,7 @@ class UserMapper < ActiveMappers::Base
 end
 ```
 
-**Declaring relationship**
+### Declaring relationship
 
 You can declare any type of relationship (`has_one`, `belongs_to`, `has_many`, etc) and the mapper that matches it will automatically be fetched and used.
 
@@ -177,7 +177,15 @@ It will generate something like
 
 It also works with namespaced resources.
 
-**Declaring polymorphic relationships**
+If you need you can specify more options :
+
+```ruby
+class UserMapper < ActiveMappers::Base
+  relation :account, AccountMapper, scope: :admin
+end
+```
+
+### Declaring polymorphic relationships
 
 Consider the following polymorphic relation :
 
@@ -217,7 +225,7 @@ end
 
 Then, based of the `XXX_type` column, the mapper will automatically resolve to either `AdminUserMapper` or `NormalUserMapper`
 
-**Rendering a collection of different classes**
+### Rendering a collection of different classes
 
 Say you want to render many resources with a single Mapper
 
@@ -257,7 +265,7 @@ Will generate the following :
 
 Again, just like the above polymorphic declaration, the mapper will automatically resolve to the corresponding one.
 
-**Custom Attributes**
+### Custom Attributes
 
 If you need to implement custom attributes you can always use the `each` statement.
 
@@ -290,7 +298,25 @@ Will generate the following:
 You can declare any number of `each` in a single mapper.
 Actually, `each` is used to implement every above features.
 
-**Scope**
+### Context
+
+In most cases declaring your mapper with your resource should be enough. However, sometimes you may need to give your mapper a context in order to allow it to resolve a method or something else.
+
+At fidme we found a use case where we need to send an instance of a user along with a mapper in order to call a model method with user as params.
+
+To solve this use case we use the context option, for instance :
+
+```ruby
+class RewardMapper < ActiveMappers::Base
+  each do |reward, context|
+    { user_reward: reward.of_user(context) }
+  end
+end
+
+RewardMapper.with(reward, context: user)
+```
+
+### Scope
 
 ActiveMappers does not yet support inheritance. However we provide an even better alternative named `scope`.
 
@@ -327,7 +353,6 @@ UserMapper.with(User.first, scope: :owner)
 # => { pseudo: 'michael33', email: 'mvilleneuve@fidme.com' }
 ```
 
-
 ## Using a mapper
 
 Even though there are many ways to declare a mapper, there is only one way to use it
@@ -359,7 +384,7 @@ By default, root will be enabled, meaning a UserMapper, will generate a JSON pre
 }
 ```
 
-**Custom Root**
+### Custom Root
 
 If you want to customize the root name, you can use
 
@@ -375,7 +400,7 @@ which will generate :
 }
 ```
 
-**Rootless**
+### Rootless
 
 If you do not want to set any root, use :
 
@@ -409,7 +434,8 @@ module ActiveMappers
   end
 end
 ```
-and then: 
+
+and then:
 
 ```ruby
 class UserMapper < ActiveMappers::Base
