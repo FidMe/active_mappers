@@ -4,6 +4,7 @@ require 'mocha/minitest'
 
 class UserMapper < ActiveMappers::Base
   attributes :id
+  polymorphic :content
 
   each do
     { lol: 'lol' }
@@ -19,12 +20,11 @@ class FriendMapper < ActiveMappers::Base
 end
 
 class User
-  attr_accessor :id, :name, :friend
+  attr_accessor :id, :name, :friend, :content_type, :content_id, :content
 
-  def initialize(id, name, friend = nil)
-    @id = id
-    @name = name
-    @friend = friend
+  def initialize(id, name, friend = nil, content_type = nil, content_id = nil)
+    @id, @name, @friend, @content_type, @content_id = id, name, friend, content_type, content_id
+    @content = content_type.constantize.new(@content_id, 'Henri', nil) if content_id
   end
 end
 
@@ -52,6 +52,18 @@ class ActiveMappersTest < Minitest::Test
   def test_can_render_a_single_resource
     user = User.new('123', 'Michael', nil)
     assert_equal user.id, UserMapper.with(user)[:user][:id]
+  end
+
+  def test_can_render_a_polymorphic_resource
+    user = User.new('123', 'Michael', nil, "Friend", '1')
+    assert user.content != nil, 'should not be nil'
+    assert_equal user.content.name, UserMapper.with(user)[:user][:content][:name]
+  end
+
+  def test_can_render_without_presence_of_polymorphic_resource
+    user = User.new('123', 'Michael')
+    assert user.content == nil, 'should be nil'
+    assert !UserMapper.with(user)[:user].key?(:content)
   end
 
   def test_each_can_be_used_to_declare_custom_attrs
@@ -338,7 +350,7 @@ class ActiveMappersTest < Minitest::Test
     user = User.new('123', 'Michael', nil)
     assert_equal [{}], EmptyMapper.with([user], rootless: true)
   end
-  
+
   class WithContextMapper < ActiveMappers::Base
     each do |user, context|
       { context: context }
