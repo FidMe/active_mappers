@@ -350,7 +350,7 @@ class ActiveMappersTest < Minitest::Test
     user = User.new('123', 'Michael', nil)
     assert_equal [{}], EmptyMapper.with([user], rootless: true)
   end
-  
+
   class WithContextMapper < ActiveMappers::Base
     each do |user, context|
       { context: context }
