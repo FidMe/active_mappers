@@ -53,6 +53,41 @@ class BusinessSector
   end
 end
 
+class Requirement
+  attr_accessor :id, :content_type, :content_id, :content
+
+  def initialize(id, content_type, content_id)
+    @id = id
+    @content_type = content_type
+    @content_id = content_id
+    @content = @content_type.constantize.new(@content_id, 12.5) if @content_id
+  end
+end
+
+class Ticket
+  attr_accessor :id, :price
+
+  def initialize(id, price)
+    @id = id
+    @price = price
+  end
+end
+
+class RequirementMapper < ActiveMappers::Base
+  attributes :id
+  polymorphic :content
+  scope :admin do
+    polymorphic :content, scope: :admin
+  end
+end
+
+class TicketMapper < ActiveMappers::Base
+  attributes :id
+  scope :admin do
+    attributes :price
+  end
+end
+
 class NamespacesTest < Minitest::Test
   def test_scopes_allow_to_scope_dsl_declarations
     reflection = Struct.new(:class_name)
@@ -77,6 +112,17 @@ class NamespacesTest < Minitest::Test
 
     assert_equal '124', mapper1[:children][0][:id]
     assert_nil mapper2[:children]
+  end
+
+  def test_polymorphic_scope
+    requirement = Requirement.new('1', 'Ticket', '1')
+
+    mapper = RequirementMapper.with(requirement)[:requirement]
+    mapper_admin = RequirementMapper.with(requirement, scope: :admin)[:requirement]
+
+    assert !mapper[:content].key?(:price),      'RequirementMapper with no scope admin should not return price'
+    assert mapper_admin[:content].key?(:price), 'RequirementMapper with admin scope should return price'
+    assert_equal requirement.content.price, mapper_admin[:content][:price]
   end
 
   def test_scopes_fail_safely

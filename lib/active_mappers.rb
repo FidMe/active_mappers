@@ -54,11 +54,11 @@ module ActiveMappers
       end
     end
 
-    def self.polymorphic(key)
+    def self.polymorphic(key, **options)
       each do |resource|
         if polymorphic_resource = resource.send("#{key}_type")
           resource_mapper = "#{KeyTransformer.base_namespace(self)}::#{polymorphic_resource}Mapper".constantize
-          { key => resource_mapper.with(resource.send(key), rootless: true) }
+          { key => resource_mapper.with(resource.send(key), options.merge(rootless: true)) }
         else
           {}
         end
