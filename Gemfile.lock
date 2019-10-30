@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    active_mappers (1.4.0)
+    active_mappers (1.4.3)
       activesupport (>= 4.2)
       method_source (~> 0.9.2)
       mocha (>= 1.8.0)
