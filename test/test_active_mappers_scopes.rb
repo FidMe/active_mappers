@@ -88,6 +88,62 @@ class TicketMapper < ActiveMappers::Base
   end
 end
 
+
+
+class CreditableOfUser
+  attr_accessor :id, :points
+  def initialize(id, points)
+    @id = id
+    @points = points
+  end
+end
+
+class StampableOfUser
+  attr_accessor :id, :position, :number
+  def initialize(id, position, number)
+    @id = id
+    @position = position
+    @number = number
+  end
+end
+
+class ScannableOfUser
+  attr_accessor :id, :value
+  def initialize(id, value)
+    @id = id
+    @value = value
+  end
+end
+
+class OfUserMapper < ActiveMappers::Base
+  acts_as_polymorph
+  attributes :id
+
+  scope :admin do
+    acts_as_polymorph(scope: :admin)
+  end
+end
+
+class CreditableOfUserMapper < ActiveMappers::Base
+  scope :admin do
+    attributes :points
+  end
+end
+
+class StampableOfUserMapper < ActiveMappers::Base
+  scope :admin do
+    each do |item|
+      { calculate: item.position * item.number }
+    end
+  end
+end
+
+class ScannableOfUserMapper < ActiveMappers::Base
+  attributes :value
+end
+
+
+
 class NamespacesTest < Minitest::Test
   def test_scopes_allow_to_scope_dsl_declarations
     reflection = Struct.new(:class_name)
@@ -133,4 +189,29 @@ class NamespacesTest < Minitest::Test
     end
     assert exception.message.include?('No scope named dza found')
   end
+
+  def test_acts_as_polymorph_with_scope
+    c = CreditableOfUser.new('123', 100)
+    s = StampableOfUser.new('456', 2, 10)
+    v = ScannableOfUser.new('789', '0000000001')
+
+    [c, s, v].each do |item|
+      map = OfUserMapper.with(item)[:ofUser]
+      assert !map.key?(:points)
+      assert !map.key?(:calculate)
+    end
+
+    map = OfUserMapper.with(c, scope: :admin)[:ofUser]
+    assert_equal '123', map[:id]
+    assert_equal 100, map[:points]
+
+    map = OfUserMapper.with(s, scope: :admin)[:ofUser]
+    assert_equal '456', map[:id]
+    assert_equal 20, map[:calculate]
+
+    map = OfUserMapper.with(v, scope: :admin)[:ofUser]
+    assert_equal '789', map[:id]
+    assert_equal '0000000001', map[:value]
+  end
+
 end
