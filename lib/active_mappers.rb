@@ -55,7 +55,8 @@ module ActiveMappers
     end
 
     def self.polymorphic(key, **options)
-      each do |resource|
+      each do |resource, context|
+        options[:context] = context
         if polymorphic_resource = resource.send("#{key}_type")
           resource_mapper = "#{KeyTransformer.base_namespace(self)}::#{polymorphic_resource}Mapper".constantize
           { key => resource_mapper.with(resource.send(key), default_options.merge(options)) }

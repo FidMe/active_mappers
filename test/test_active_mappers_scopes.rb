@@ -83,6 +83,9 @@ end
 
 class TicketMapper < ActiveMappers::Base
   attributes :id
+  each do |ticket, context|
+    { context: context }
+  end
   scope :admin do
     attributes :price
   end
@@ -179,6 +182,13 @@ class NamespacesTest < Minitest::Test
     assert !mapper[:content].key?(:price),      'RequirementMapper with no scope admin should not return price'
     assert mapper_admin[:content].key?(:price), 'RequirementMapper with admin scope should return price'
     assert_equal requirement.content.price, mapper_admin[:content][:price]
+  end
+
+  def test_polymorphic_scope_with_context
+    requirement = Requirement.new('1', 'Ticket', '1')
+
+    mapper = RequirementMapper.with(requirement, context: { key: 'value' })[:requirement]
+    assert_equal 'value', mapper[:content][:context][:key]
   end
 
   def test_scopes_fail_safely
