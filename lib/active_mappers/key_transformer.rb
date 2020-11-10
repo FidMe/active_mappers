@@ -18,14 +18,14 @@ module ActiveMappers
 
     def self.resource_class_to_mapper(resource_class_name, class_from)
       resource_class_name[0..1] = '' if resource_class_name.start_with?('::')
-      
+
       "#{base_namespace(class_from)}::#{resource_class_name}Mapper".constantize
     rescue NameError
       raise "undefined mapper: '#{base_namespace(class_from)}::#{resource_class_name}Mapper'"
     end
 
     def initialize(name)
-      @name = name
+      @name = name.dup
     end
 
     def remove_ignored_namespace

@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'active_mappers'
-  s.version     = '1.4.5'
-  s.date        = '2020-08-27'
+  s.version     = '1.4.6'
+  s.date        = '2020-11-10'
   s.summary     = 'Slick, fast view layer for you Rails API.'
   s.description = 'Fast, simple, declarative way to design your API\'s view layer'
   s.authors     = ['Michaël Villeneuve']
