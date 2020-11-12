@@ -49,9 +49,9 @@ module ActiveMappers
         else
           relation_class_name = resource.class&.reflect_on_association(options[:optional_path] || key)&.class_name
           raise "undefined relation : #{key.to_s}" if (mapper.nil? && relation_class_name.nil?)
-          KeyTransformer.resource_class_to_mapper(relation_class_name, self)
+          KeyTransformer.resource_class_to_mapper(relation_class_name.dup, self)
         end
-        
+
         raise "'#{mapper_to_use.name}' should be a mapper" unless mapper_to_use.ancestors.map(&:to_s).include?("ActiveMappers::Base")
 
         { key => mapper_to_use.with(path.to_s.split('.').inject(resource, :try), default_options.merge(options)) }
