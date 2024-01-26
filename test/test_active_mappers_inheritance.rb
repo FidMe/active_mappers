@@ -26,6 +26,5 @@ class InheritanceMappersTest < Minitest::Test
     assert_equal ({ id: 1, name: 'Michael' }), InheritedMapper.with(user, rootless: true)
     assert_equal ({ id: 1, friend: 'lol', name: 'Michael' }), DoubleInheritedMapper.with(user, rootless: true)
     assert_equal ({ id: 1, friend: 'lol' }), OtherInheritedMapper.with(user, rootless: true)
-    assert_equal ({ id: 1, friend: 'lol' }), OtherInheritedMapper.with(user, rootless: true)
   end
 end

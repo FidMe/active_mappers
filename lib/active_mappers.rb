@@ -14,9 +14,14 @@ require_relative 'active_mappers/key_transformer'
 module ActiveMappers
   class Base
     @@renderers = {}
+    @@inheritance_column = {}
 
     def self.inherited(subclass)
       Handlers::Inheritance.new(subclass, self).handle
+    end
+
+    def self.inheritance_column(val)
+      @@inheritance_column[name] = val
     end
 
     def self.attributes(*params)
@@ -87,7 +92,7 @@ module ActiveMappers
       return evaluate_scopes(args, options) unless options[:scope].nil?
 
       response = if options[:rootless]
-        args.respond_to?(:each) ? all(args, options[:context]) : one(args, options[:context])
+        args.respond_to?(:each) ? all(args, options) : one(args, options)
       else
         render_with_root(args, options)
       end
@@ -113,21 +118,26 @@ module ActiveMappers
       resource_name ||= KeyTransformer.apply_on(self.name)
 
       if args.respond_to?(:each)
-        { resource_name.to_s.pluralize.to_sym => all(args, options[:context]) }
+        { resource_name.to_s.pluralize.to_sym => all(args, options) }
       else
-        { resource_name.to_s.singularize.to_sym => one(args, options[:context]) }
+        { resource_name.to_s.singularize.to_sym => one(args, options) }
       end
     end
 
-    def self.all(collection, context = nil)
-      collection.map { |el| one(el, context) }.compact
+    def self.all(collection, options = {})
+      collection.map { |el| one(el, options) }.compact
     end
 
-    def self.one(resource, context = nil)
+    def self.one(resource, options = {})
       return nil unless resource
+      if @@inheritance_column[name] && (mapper = KeyTransformer.resource_to_mapper(resource, self) rescue nil) && name != mapper&.name
+        return mapper.with(resource, default_options.merge(options))
+      end
+
       return {} if @@renderers[name].nil? # Mapper is empty
+
       renderers = @@renderers[name].map do |renderer|
-        renderer.call(resource, context)
+        renderer.call(resource, options[:context])
       end.reduce(&:merge)
 
       KeyTransformer.format_keys(renderers)
