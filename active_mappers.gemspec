@@ -1,10 +1,10 @@
 Gem::Specification.new do |s|
   s.name        = 'active_mappers'
-  s.version     = '1.4.7'
-  s.date        = '2020-11-12'
+  s.version     = '1.5.0'
+  s.date        = '2024-01-26'
   s.summary     = 'Slick, fast view layer for you Rails API.'
   s.description = 'Fast, simple, declarative way to design your API\'s view layer'
-  s.authors     = ['Michaël Villeneuve']
+  s.authors     = ['Michaël Villeneuve', 'Loïc SENCE']
   s.homepage    = 'https://github.com/fidme/active_mappers'
   s.email       = 'contact@michaelvilleneuve.fr'
   s.files = Dir.chdir(File.expand_path('..', __FILE__)) do
