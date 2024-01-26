@@ -110,6 +110,7 @@ module ActiveMappers
         if options[:fallback_class]
           options[:fallback_class]
         elsif options[:fallback_on_missing_scope]
+          options.delete :scope
           self
         else
           raise("ActiveMappers [#{name}] No scope named #{options[:scope]} found")
