@@ -12,8 +12,8 @@ module ActiveMappers
       Setup.camelcase_keys ? hash.to_lower_camel_case : hash
     end
 
-    def self.resource_to_mapper(resource, class_from)
-      "#{base_namespace(class_from)}::#{resource.class.name}Mapper".constantize
+    def self.resource_to_mapper(resource, class_from, scope=nil)
+      "#{base_namespace(class_from)}::#{resource.class.name}Mapper#{scope ? "Scope#{scope.capitalize}" : nil}".constantize
     end
 
     def self.resource_class_to_mapper(resource_class_name, class_from)

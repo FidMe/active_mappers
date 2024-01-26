@@ -85,12 +85,15 @@ module ActiveMappers
     end
 
     def self.each(&block)
+      # puts "[l. #{__LINE__}] [#{name}] each"
       @@renderers[name] = (@@renderers[name] || []) << block
     end
 
     def self.with(args, options = {})
-      return evaluate_scopes(args, options) unless options[:scope].nil?
-
+      # puts "[l. #{__LINE__}] WITH - #{name} - #{options}"
+      if options[:scope].present? && !name.include?('Scope')
+        return evaluate_scopes(args, options)
+      end
       response = if options[:rootless]
         args.respond_to?(:each) ? all(args, options) : one(args, options)
       else
@@ -100,13 +103,25 @@ module ActiveMappers
     end
 
     def self.evaluate_scopes(args, options)
-      class_to_call = "::#{name}Scope#{options[:scope].capitalize}".constantize rescue (options[:fallback_on_missing_scope] ? self : raise("ActiveMappers [#{name}] No scope named #{options[:scope]} found"))
-      return class_to_call.with(args, options.except(:scope))
+      # puts "[l. #{__LINE__}] [#{name}] evaluate_scopes #{options}"
+      class_to_call = begin
+        "::#{name}Scope#{options[:scope].capitalize}".constantize
+      rescue
+        if options[:fallback_class]
+          options[:fallback_class]
+        elsif options[:fallback_on_missing_scope]
+          self
+        else
+          raise("ActiveMappers [#{name}] No scope named #{options[:scope]} found")
+        end
+      end
+      # puts "[l.#{__LINE__}] evaluate_scopes class_to_call -> #{class_to_call}"
+      return class_to_call.with(args, options.merge(initial_mapper: self))
     end
 
     def self.scope(*params, &block)
+      # puts "[l.#{__LINE__}] [#{name}] CREATING SCOPE CLASSES (name: #{name} | params: #{params.inspect}) ===> ::#{name}Scope#{params.first.capitalize}"
       raise "ActiveMappers [#{name}] scope must be a block" if block.nil? || !block.respond_to?(:call)
-
       params.each do |param|
         block_content = Ruby2Ruby.new.process(RubyParser.new.process(block.source).to_a.last)
         eval("class ::#{name}Scope#{param.capitalize} < ::#{name} ; #{block_content}; end")
@@ -129,12 +144,29 @@ module ActiveMappers
     end
 
     def self.one(resource, options = {})
+      # puts "[l.#{__LINE__}] [#{name}] ONE - options: #{options.inspect} - inheritance_column: #{@@inheritance_column[name]}"
       return nil unless resource
-      if @@inheritance_column[name] && (mapper = KeyTransformer.resource_to_mapper(resource, self) rescue nil) && name != mapper&.name
-        return mapper.with(resource, default_options.merge(options))
+
+      if @@inheritance_column[name] && !options[:fallback_class]
+        main_mapper = KeyTransformer.resource_to_mapper(resource, self)
+        # puts "[l.#{__LINE__}] [#{name}] ONE - main_mapper #{main_mapper}"
+        mapper = options[:scope] ? (KeyTransformer.resource_to_mapper(resource, self, options[:scope]) rescue main_mapper) : main_mapper
+        # puts "[l.#{__LINE__}] [#{name}] ONE - mapper #{mapper}"
+        if name != mapper&.name
+          return mapper.with(resource, options.merge(rootless: true, fallback_class: options[:initial_mapper]))
+        end
       end
 
       return {} if @@renderers[name].nil? # Mapper is empty
+
+      # base_mapper = name.rpartition('::').first
+
+      # renderers = ancestors.select { |it| it.name.start_with?(base_mapper) }.map do |ancestor|
+      #   puts "---> #{ancestor.name}"
+      #   @@renderers[ancestor.name].map do |renderer|
+      #     renderer.call(resource, options[:context])
+      #   end.reduce(&:merge)
+      # end.reduce(&:merge)
 
       renderers = @@renderers[name].map do |renderer|
         renderer.call(resource, options[:context])
