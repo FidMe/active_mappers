@@ -362,6 +362,56 @@ class ActiveMappersTest < Minitest::Test
     assert_equal 'coucou', WithContextMapper.with(user, context: 'coucou', rootless: true)[:context]
   end
 
+  class ChildContextMapper < ActiveMappers::Base
+    each do |friend, context|
+      { name: friend.name, context: context }
+    end
+  end
+
+  class ParentContextMapper < ActiveMappers::Base
+    attributes :id
+    relation :friend, ChildContextMapper
+  end
+
+  # Un mapper rendu comme RELATION doit recevoir le contexte de son parent, comme
+  # `polymorphic` le fait déjà (cf. test_polymorphic_scope_with_context). Sans ça il
+  # recevait `nil` et n'avait aucun moyen de savoir pour qui on rendait.
+  def test_relation_receives_the_parent_context
+    user = User.new('123', 'Michael', Friend.new('456', 'Henri'))
+
+    mapping = ParentContextMapper.with(user, context: { app: 'scan_reduc' }, rootless: true)
+
+    assert_equal 'scan_reduc', mapping[:friend][:context][:app]
+  end
+
+  class ExplicitContextParentMapper < ActiveMappers::Base
+    attributes :id
+    relation :friend, ChildContextMapper, context: { app: 'declared' }
+  end
+
+  # Le contexte du parent n'est qu'un DÉFAUT : un `context:` posé à la déclaration de la
+  # relation reste prioritaire.
+  def test_relation_keeps_an_explicit_context
+    user = User.new('123', 'Michael', Friend.new('456', 'Henri'))
+
+    mapping = ExplicitContextParentMapper.with(user, context: { app: 'scan_reduc' }, rootless: true)
+
+    assert_equal 'declared', mapping[:friend][:context][:app]
+  end
+
+  # ⚠️ `options` est capturé par la closure et partagé par tous les rendus du mapper : le
+  # muter ferait fuiter le contexte d'un rendu à l'autre. Deux rendus successifs avec des
+  # contextes différents doivent rester indépendants.
+  def test_relation_context_does_not_leak_between_renders
+    user = User.new('123', 'Michael', Friend.new('456', 'Henri'))
+
+    first  = ParentContextMapper.with(user, context: { app: 'core' }, rootless: true)
+    second = ParentContextMapper.with(user, rootless: true)
+
+    assert_equal 'core', first[:friend][:context][:app]
+    assert_nil second[:friend][:context], 'le contexte du rendu précédent a fuité'
+  end
+
   def test_core_extensions_work_as_expected
     params = {
       first_name: 'Nathan',

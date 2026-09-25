@@ -316,6 +316,34 @@ end
 RewardMapper.with(reward, context: user)
 ```
 
+The context is **propagated to nested mappers**, both through `relation` and through
+`polymorphic`. A child mapper rendered as a relation therefore sees the same context as
+its parent, without having to walk back up the association:
+
+```ruby
+class TicketMapper < ActiveMappers::Base
+  relation :pictures, PictureMapper
+end
+
+class PictureMapper < ActiveMappers::Base
+  each do |picture, context|
+    { uri: picture.uri_for(context[:app]) }   # => 'scan_reduc'
+  end
+end
+
+TicketMapper.with(ticket, context: { app: 'scan_reduc' })
+```
+
+A context declared on the relation itself wins over the parent's — the parent's is only a
+default:
+
+```ruby
+relation :pictures, PictureMapper, context: { app: 'always_this_one' }
+```
+
+> Before 1.6.0, `relation` did not forward the context (`polymorphic` already did), so a
+> nested mapper always received `nil`.
+
 ### Scope
 
 ActiveMappers does not yet support inheritance. However we provide an even better alternative named `scope`.

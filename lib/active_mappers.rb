@@ -3,6 +3,11 @@ require 'ruby2ruby'
 require 'ruby_parser'
 
 require 'active_support'
+# ⚠️ `blank?` / `present?` sont utilisés par `with` : dans une application Rails ils
+# arrivent par le require complet d'ActiveSupport, mais en test ISOLÉ la gem ne charge que
+# ce qu'elle déclare — sans cette ligne, toute la suite tombait en
+# `NoMethodError: undefined method 'present?'`.
+require 'active_support/core_ext/object/blank'
 require 'active_support/core_ext/object/try'
 require 'active_support/core_ext/hash/except'
 require 'active_support/core_ext/string/inflections'
@@ -46,9 +51,21 @@ module ActiveMappers
       end
     end
 
+    # ⚠️ Le bloc capture `context` et le passe au mapper enfant. Sans ça, un mapper rendu
+    # comme relation recevait toujours `nil` — alors que `polymorphic` le propageait déjà :
+    # l'enfant ne pouvait donc pas savoir pour qui on rendait (app appelante, scope…), et
+    # la seule parade était de remonter au parent par l'association.
+    #
+    # ⚠️ Le contexte est ajouté SOUS `options`, pas par-dessus : un `context:` passé
+    # explicitement à la déclaration (`relation :x, Mapper, context: {...}`) reste
+    # prioritaire, et celui du parent ne sert que de défaut.
+    #
+    # ⚠️ On MERGE au lieu d'écrire `options[:context] = context` : `options` est capturé par
+    # la closure et partagé par TOUS les rendus de ce mapper. Le muter ferait fuiter le
+    # contexte d'un rendu à l'autre entre threads.
     def self.relation(key, mapper = nil, **options)
       path = options[:optional_path] || key
-      each do |resource|
+      each do |resource, context|
         mapper_to_use = if mapper
           mapper
         else
@@ -59,16 +76,17 @@ module ActiveMappers
 
         raise "'#{mapper_to_use.name}' should be a mapper" unless mapper_to_use.ancestors.map(&:to_s).include?("ActiveMappers::Base")
 
-        { key => mapper_to_use.with(path.to_s.split('.').inject(resource, :try), default_options.merge(options)) }
+        { key => mapper_to_use.with(path.to_s.split('.').inject(resource, :try), { context: context }.merge(default_options.merge(options))) }
       end
     end
 
     def self.polymorphic(key, **options)
       each do |resource, context|
-        options[:context] = context
+        # Même merge non mutant que `relation` : `options[:context] = context` mutait le
+        # hash capturé par la closure, partagé par tous les rendus de ce mapper.
         if polymorphic_resource = resource.send("#{key}_type")
           resource_mapper = "#{KeyTransformer.base_namespace(self)}::#{polymorphic_resource}Mapper".constantize
-          { key => resource_mapper.with(resource.send(key), default_options.merge(options)) }
+          { key => resource_mapper.with(resource.send(key), { context: context }.merge(default_options.merge(options))) }
         else
           {}
         end
